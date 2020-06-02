@@ -111,7 +111,6 @@ func Run(c *config.Config, name string, args []string) {
 // Fatalf writes to stderr and exits.
 func Fatalf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "\n  %s\n\n", fmt.Sprintf(msg, args...))
-	os.Exit(1)
 }
 
 // Template helper.

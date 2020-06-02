@@ -1,8 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"path/filepath"
+	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/log"
 	"github.com/tj/docopt"
 	"github.com/tj/robo/cli"
 	"github.com/tj/robo/config"
@@ -16,6 +21,7 @@ const usage = `
     robo <task> [<arg>...] [--config file]
     robo help [<task>] [--config file]
     robo variables [--config file]
+    robo startweb [--config file]
     robo -h | --help
     robo --version
 
@@ -59,6 +65,9 @@ func main() {
 		}
 	case args["variables"].(bool):
 		cli.ListVariables(c)
+	case args["startweb"].(bool):
+		roboV := c.Variables["robo"].(map[interface{}]interface{})
+		startWeb(c, roboV["web-addr"].(string), roboV["token"].(string))
 	default:
 		if name, ok := args["<task>"].(string); ok {
 			cli.Run(c, name, args["<arg>"].([]string))
@@ -66,4 +75,48 @@ func main() {
 			cli.List(c)
 		}
 	}
+}
+
+func startWeb(conf *config.Config, addr, token string) {
+	type PostBody struct {
+		Token string   `json:"token""  binding:"required"`
+		Args  []string `json:"args""  binding:"required"`
+	}
+
+	r := gin.New()
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		// your custom format
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
+			param.ClientIP,
+			param.TimeStamp.Format(time.RFC1123),
+			param.Method,
+			param.Path,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
+	}))
+	r.Use(gin.Recovery())
+	r.POST("/task/:taskname", func(gc *gin.Context) {
+		var pBody PostBody
+		if err := gc.ShouldBindJSON(&pBody); err != nil {
+			gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if pBody.Token != token {
+			log.Warnf("Wrong token: %s", token)
+			gc.JSON(http.StatusForbidden, gin.H{"message": "bad token"})
+			return
+		}
+		taskName := gc.Param("taskname")
+		info := fmt.Sprintf("%s: %s", taskName, pBody.Args)
+		log.Info(info)
+		cli.Run(conf, taskName, pBody.Args)
+		gc.JSON(http.StatusOK, gin.H{"message": info})
+	})
+	r.Run(addr) // listen and serve on 0.0.0.0:8080
+
 }
