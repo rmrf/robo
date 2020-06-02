@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/common/log"
 	"github.com/tj/docopt"
 	"github.com/tj/robo/cli"
 	"github.com/tj/robo/config"
@@ -107,13 +107,13 @@ func startWeb(conf *config.Config, addr, token string) {
 		}
 
 		if pBody.Token != token {
-			log.Warnf("Wrong token: %s", token)
+			log.Printf("Wrong token: %s", token)
 			gc.JSON(http.StatusForbidden, gin.H{"message": "bad token"})
 			return
 		}
 		taskName := gc.Param("taskname")
 		info := fmt.Sprintf("%s: %s", taskName, pBody.Args)
-		log.Info(info)
+		log.Println(info)
 		cli.Run(conf, taskName, pBody.Args)
 		gc.JSON(http.StatusOK, gin.H{"message": info})
 	})
