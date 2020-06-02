@@ -66,8 +66,8 @@ func main() {
 	case args["variables"].(bool):
 		cli.ListVariables(c)
 	case args["startweb"].(bool):
-		roboV := c.Variables["robo"].(map[string]string)
-		startWeb(c, roboV["web-addr"], roboV["token"])
+		roboV := c.Variables["robo"].(map[interface{}]interface{})
+		startWeb(c, roboV["web-addr"].(string), roboV["token"].(string))
 	default:
 		if name, ok := args["<task>"].(string); ok {
 			cli.Run(c, name, args["<arg>"].([]string))

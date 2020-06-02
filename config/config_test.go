@@ -33,7 +33,10 @@ templates:
 variables:
   hosts:
     prod: bastion-prod
-    stage: bastion-stage
+	stage: bastion-stage
+  robo:
+	web-addr: "0.0.0.0:8088"
+	token: saymyname
 `
 
 func TestNewString(t *testing.T) {
