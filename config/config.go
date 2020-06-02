@@ -72,8 +72,10 @@ func New(file string) (*Config, error) {
 	// but respect users who override them.
 	if _, ok := c.Variables["robo"]; !ok {
 		c.Variables["robo"] = map[string]string{
-			"path": path.Dir(c.File),
-			"file": c.File,
+			"path":     path.Dir(c.File),
+			"file":     c.File,
+			"web-addr": "0.0.0.0:8081",
+			"token":    "fake token here",
 		}
 	}
 

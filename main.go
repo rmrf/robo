@@ -21,6 +21,7 @@ const usage = `
     robo <task> [<arg>...] [--config file]
     robo help [<task>] [--config file]
     robo variables [--config file]
+    robo startweb [--config file]
     robo -h | --help
     robo --version
 
@@ -55,10 +56,29 @@ func main() {
 		cli.Fatalf("error loading configuration: %s", err)
 	}
 
-	// ---------------------
+	switch {
+	case args["help"].(bool):
+		if name, ok := args["<task>"].(string); ok {
+			cli.Help(c, name)
+		} else {
+			cli.List(c)
+		}
+	case args["variables"].(bool):
+		cli.ListVariables(c)
+	case args["startweb"].(bool):
+		roboV := c.Variables["robo"].(map[string]string)
+		startWeb(c, roboV["web-addr"], roboV["token"])
+	default:
+		if name, ok := args["<task>"].(string); ok {
+			cli.Run(c, name, args["<arg>"].([]string))
+		} else {
+			cli.List(c)
+		}
+	}
+}
 
+func startWeb(conf *config.Config, addr, token string) {
 	r := gin.New()
-
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// your custom format
 		return fmt.Sprintf("%s - [%s] \"%s %s %d %s \"%s\" %s\"\n",
@@ -74,37 +94,20 @@ func main() {
 	}))
 	r.Use(gin.Recovery())
 	r.GET("/:action/:userid", func(gc *gin.Context) {
-		token := gc.DefaultQuery("token", "")
-		if token != "sayMyN0me" {
+		pToken := gc.DefaultQuery("token", "")
+		if pToken != token {
 			log.Warnf("Wrong token: %s", token)
 			gc.JSON(http.StatusForbidden, gin.H{"message": "bad token"})
 		} else {
 			action := gc.Param("action")
 			userid := gc.Param("userid")
 			log.Infof("Doing %s: %s", action, userid)
-			cli.Run(c, action, []string{userid})
+			cli.Run(conf, action, []string{userid})
 			gc.JSON(http.StatusOK, gin.H{
 				"message": "ok",
 			})
 		}
 	})
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-	// ---------------------
+	r.Run(addr) // listen and serve on 0.0.0.0:8080
 
-	switch {
-	case args["help"].(bool):
-		if name, ok := args["<task>"].(string); ok {
-			cli.Help(c, name)
-		} else {
-			cli.List(c)
-		}
-	case args["variables"].(bool):
-		cli.ListVariables(c)
-	default:
-		if name, ok := args["<task>"].(string); ok {
-			cli.Run(c, name, args["<arg>"].([]string))
-		} else {
-			cli.List(c)
-		}
-	}
 }
