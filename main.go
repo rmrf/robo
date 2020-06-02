@@ -1,8 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"path/filepath"
+	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/log"
 	"github.com/tj/docopt"
 	"github.com/tj/robo/cli"
 	"github.com/tj/robo/config"
@@ -49,6 +54,42 @@ func main() {
 	if err != nil {
 		cli.Fatalf("error loading configuration: %s", err)
 	}
+
+	// ---------------------
+
+	r := gin.New()
+
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		// your custom format
+		return fmt.Sprintf("%s - [%s] \"%s %s %d %s \"%s\" %s\"\n",
+			param.ClientIP,
+			param.TimeStamp.Format(time.RFC1123),
+			param.Method,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
+	}))
+	r.Use(gin.Recovery())
+	r.GET("/:action/:userid", func(gc *gin.Context) {
+		token := gc.DefaultQuery("token", "")
+		if token != "sayMyN0me" {
+			log.Warnf("Wrong token: %s", token)
+			gc.JSON(http.StatusForbidden, gin.H{"message": "bad token"})
+		} else {
+			action := gc.Param("action")
+			userid := gc.Param("userid")
+			log.Infof("Doing %s: %s", action, userid)
+			cli.Run(c, action, []string{userid})
+			gc.JSON(http.StatusOK, gin.H{
+				"message": "ok",
+			})
+		}
+	})
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	// ---------------------
 
 	switch {
 	case args["help"].(bool):
