@@ -1,37 +1,43 @@
 
 # Robo
 
- [![Build Status](https://travis-ci.org/tj/robo.svg?branch=master)](https://travis-ci.org/tj/robo)
-
- Simple YAML-based task runner written in Go.
-
- ![](http://img1.wikia.nocookie.net/__cb20130827204332/callofduty/images/f/fa/Giant_mech_Origins_BOII.png)
-
-## Features
-
- - Not super slow
- - Not super obscure
- - No dependencies
- - Variables
- - Simple
-
 ## Installation
-
-From [gobinaries.com](https://gobinaries.com):
-
-```sh
-$ curl -sf https://gobinaries.com/tj/robo | sh
-```
 
 From source:
 
 ```
-$ go get github.com/tj/robo
+$ go get github.com/rmrf/robo
 ```
 
-## Usage
+## Build
 
- Command-line usage.
+```
+make bin
+```
+
+## Web API usage.
+
+
+### start web api:
+```
+$robo startweb
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] POST   /task/:taskname           --> main.startWeb.func2 (3 handlers)
+[GIN-debug] Listening and serving HTTP on 0.0.0.0:8089
+
+```
+
+### use web api trigger task:
+```
+curl -XPOST localhost:8089/task/hello \
+   -d'{"token":"mytoken", "args":["a","b","java"]}'
+```
+
+## Command-line usage.
 
 ### Listing tasks
 

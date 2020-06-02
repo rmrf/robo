@@ -78,13 +78,19 @@ func main() {
 }
 
 func startWeb(conf *config.Config, addr, token string) {
+	type PostBody struct {
+		Token string   `json:"token""  binding:"required"`
+		Args  []string `json:"args""  binding:"required"`
+	}
+
 	r := gin.New()
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// your custom format
-		return fmt.Sprintf("%s - [%s] \"%s %s %d %s \"%s\" %s\"\n",
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
 			param.TimeStamp.Format(time.RFC1123),
 			param.Method,
+			param.Path,
 			param.Request.Proto,
 			param.StatusCode,
 			param.Latency,
@@ -93,20 +99,23 @@ func startWeb(conf *config.Config, addr, token string) {
 		)
 	}))
 	r.Use(gin.Recovery())
-	r.GET("/:action/:userid", func(gc *gin.Context) {
-		pToken := gc.DefaultQuery("token", "")
-		if pToken != token {
+	r.POST("/task/:taskname", func(gc *gin.Context) {
+		var pBody PostBody
+		if err := gc.ShouldBindJSON(&pBody); err != nil {
+			gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if pBody.Token != token {
 			log.Warnf("Wrong token: %s", token)
 			gc.JSON(http.StatusForbidden, gin.H{"message": "bad token"})
-		} else {
-			action := gc.Param("action")
-			userid := gc.Param("userid")
-			log.Infof("Doing %s: %s", action, userid)
-			cli.Run(conf, action, []string{userid})
-			gc.JSON(http.StatusOK, gin.H{
-				"message": "ok",
-			})
+			return
 		}
+		taskName := gc.Param("taskname")
+		info := fmt.Sprintf("%s: %s", taskName, pBody.Args)
+		log.Info(info)
+		cli.Run(conf, taskName, pBody.Args)
+		gc.JSON(http.StatusOK, gin.H{"message": info})
 	})
 	r.Run(addr) // listen and serve on 0.0.0.0:8080
 
