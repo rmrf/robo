@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os/user"
 	"path"
+	"sync"
 	"text/template"
 
 	"gopkg.in/yaml.v2"
@@ -39,6 +40,8 @@ func (c *Config) Eval() error {
 		if err != nil {
 			return err
 		}
+		task.Mu = &sync.Mutex{}
+		task.Running = false
 
 		for i, item := range task.Env {
 			if err := interpolate(c.Variables, &item); err != nil {

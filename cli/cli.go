@@ -81,7 +81,7 @@ func Help(c *config.Config, name string) {
 	task, ok := c.Tasks[name]
 
 	if !ok {
-		Fatalf("undefined task %q", name)
+		Errorf("undefined task %q", name)
 	}
 
 	tmpl := t(help)
@@ -94,23 +94,34 @@ func Help(c *config.Config, name string) {
 }
 
 // Run the task.
-func Run(c *config.Config, name string, args []string) {
+func Run(c *config.Config, name string, args []string) error {
 	task, ok := c.Tasks[name]
 	if !ok {
-		Fatalf("undefined task %q", name)
+		Errorf("undefined task %q", name)
 	}
 
 	task.LookupPath = filepath.Dir(c.File)
 
+	if task.Running {
+		return fmt.Errorf("task %s is running, refuse to run another", task.Name)
+	}
 	err := task.Run(args)
 	if err != nil {
-		Fatalf("error: %s", err)
+		Errorf("error: %s", err)
 	}
+	task.Running = false
+	return nil
 }
 
-// Fatalf writes to stderr and exits.
+// Errorf writes to stderr
+func Errorf(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, "\n  %s\n\n", fmt.Sprintf(msg, args...))
+}
+
+// Fatalf writes to stderr then exit
 func Fatalf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "\n  %s\n\n", fmt.Sprintf(msg, args...))
+	os.Exit(1)
 }
 
 // Template helper.

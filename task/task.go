@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/mattn/go-shellwords"
@@ -28,10 +29,15 @@ type Task struct {
 	Usage      string
 	Examples   []*Example
 	Env        []string
+	Mu         *sync.Mutex
+	Running    bool
 }
 
 // Run the task with `args`.
 func (t *Task) Run(args []string) error {
+	t.Mu.Lock()
+	t.Running = true
+	defer t.Mu.Unlock()
 	if t.Exec != "" {
 		return t.RunExec(args)
 	}

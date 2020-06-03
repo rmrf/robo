@@ -114,9 +114,14 @@ func startWeb(conf *config.Config, addr, token string) {
 		taskName := gc.Param("taskname")
 		info := fmt.Sprintf("%s: %s", taskName, pBody.Args)
 		log.Println(info)
-		cli.Run(conf, taskName, pBody.Args)
+		err := cli.Run(conf, taskName, pBody.Args)
+		if err != nil {
+			log.Printf("client run failed: %s", err.Error())
+			gc.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
 		gc.JSON(http.StatusOK, gin.H{"message": info})
 	})
-	r.Run(addr) // listen and serve on 0.0.0.0:8080
+	r.Run(addr)
 
 }
