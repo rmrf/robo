@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/fatih/color"
-	"github.com/tj/robo/config"
+	"github.com/rmrf/robo/config"
 )
 
 // Template helpers.

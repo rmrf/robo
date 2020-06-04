@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bmizerany/assert"
-	"github.com/tj/robo/config"
+	"github.com/rmrf/robo/config"
 )
 
 var s = `
@@ -33,10 +33,10 @@ templates:
 variables:
   hosts:
     prod: bastion-prod
-	stage: bastion-stage
+    stage: bastion-stage
   robo:
-	web-addr: "0.0.0.0:8088"
-	token: saymyname
+    web-addr: "0.0.0.0:8088"
+    token: saymyname
 `
 
 func TestNewString(t *testing.T) {
@@ -59,6 +59,9 @@ func TestNewString(t *testing.T) {
 	assert.Equal(t, []string{"H=bastion-prod"}, c.Tasks["prod"].Env)
 
 	assert.Equal(t, `testing`, c.Templates.List)
+
+	roboV := c.Variables["robo"].(map[interface{}]interface{})
+	assert.Equal(t, `saymyname`, roboV["token"])
 }
 
 func TestNew(t *testing.T) {

@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/docopt/docopt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/tj/docopt"
-	"github.com/tj/robo/cli"
-	"github.com/tj/robo/config"
+	"github.com/rmrf/robo/cli"
+	"github.com/rmrf/robo/config"
 )
 
 var version = "0.5.5"
@@ -122,6 +122,10 @@ func startWeb(conf *config.Config, addr, token string) {
 		}
 		gc.JSON(http.StatusOK, gin.H{"message": info})
 	})
-	r.Run(addr)
+	s := &http.Server{Addr: addr,
+		Handler:      r,
+		ReadTimeout:  6 * time.Second,
+		WriteTimeout: 6 * time.Second}
+	s.ListenAndServe()
 
 }

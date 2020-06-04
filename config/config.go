@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/tj/robo/task"
+	"github.com/rmrf/robo/task"
 )
 
 // Config represents the main YAML configuration
