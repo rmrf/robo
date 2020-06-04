@@ -13,7 +13,7 @@ import (
 	"github.com/rmrf/robo/config"
 )
 
-var version = "0.5.5"
+var version = "0.5.6"
 
 const usage = `
   Usage:
