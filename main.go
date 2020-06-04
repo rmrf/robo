@@ -9,11 +9,12 @@ import (
 
 	"github.com/docopt/docopt-go"
 	"github.com/gin-gonic/gin"
+	ginprometheus "github.com/mcuadros/go-gin-prometheus"
 	"github.com/rmrf/robo/cli"
 	"github.com/rmrf/robo/config"
 )
 
-var version = "0.5.6"
+var version = "0.5.7"
 
 const usage = `
   Usage:
@@ -84,6 +85,9 @@ func startWeb(conf *config.Config, addr, token string) {
 	}
 
 	r := gin.New()
+	p := ginprometheus.NewPrometheus("robo")
+	p.Use(r)
+
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// your custom format
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",

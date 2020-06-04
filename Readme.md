@@ -36,6 +36,12 @@ $robo startweb
 curl -XPOST localhost:8089/task/hello \
    -d'{"token":"mytoken", "args":["a","b","java"]}'
 ```
+### web api prometheus metrics:
+
+```
+curl  -qs localhost:8089/metrics
+```
+
 
 ## Command-line usage.
 

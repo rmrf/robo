@@ -1,3 +1,13 @@
+v0.5.7 / 2020-06-04
+===================
+
+  * main: add web prometheus metrics
+
+v0.5.6 / 2020-06-04
+===================
+
+  * main: add web api to trigger task execution
+  * ci: use github action
 
 v0.5.5 / 2020-02-16
 ===================
